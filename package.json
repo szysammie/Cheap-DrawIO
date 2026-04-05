@@ -5,7 +5,7 @@
     "private": true,
     "main": "dist-electron/main/index.js",
     "scripts": {
-        "dev": "next dev --turbopack --port 6002",
+        "dev": "next dev --hostname 0.0.0.0 --port 6002",
         "build": "next build",
         "start": "next start --port 6001",
         "lint": "biome lint .",

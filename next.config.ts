@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     outputFileTracingIncludes: {
         "*": ["./instrumentation.ts"],
     },
+    allowedDevOrigins: ["111.228.45.250"],
 }
 
 export default nextConfig
