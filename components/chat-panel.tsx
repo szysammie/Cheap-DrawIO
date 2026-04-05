@@ -33,6 +33,7 @@ import { useValidateDiagram } from "@/hooks/use-validate-diagram"
 import { getApiEndpoint } from "@/lib/base-path"
 import { findCachedResponse } from "@/lib/cached-responses"
 import { formatMessage } from "@/lib/i18n/utils"
+import { compressImageForAI } from "@/lib/image-compression"
 import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
 import { sanitizeMessages } from "@/lib/session-storage"
 import { STORAGE_KEYS } from "@/lib/storage"
@@ -1133,17 +1134,16 @@ export default function ChatPanel({
                     userText += `\n\n[File: ${file.name}]\n${extracted.text}`
                 }
             } else if (imageParts) {
-                // Handle as image (only if imageParts array provided)
-                const reader = new FileReader()
-                const dataUrl = await new Promise<string>((resolve) => {
-                    reader.onload = () => resolve(reader.result as string)
-                    reader.readAsDataURL(file)
-                })
+                // Compress image before sending to AI:
+                // - Resizes to max 1280px (preserves aspect ratio)
+                // - Converts to JPEG at 0.7 quality (5-10x smaller than PNG)
+                // - Prevents frontend freeze from large base64 strings in React state
+                const { dataUrl } = await compressImageForAI(file)
 
                 imageParts.push({
                     type: "file",
                     url: dataUrl,
-                    mediaType: file.type,
+                    mediaType: "image/jpeg",
                 })
             }
         }
