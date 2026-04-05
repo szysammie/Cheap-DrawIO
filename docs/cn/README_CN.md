@@ -1,4 +1,4 @@
-# Next AI Draw.io
+# Cheap
 
 <div align="center">
 
@@ -26,7 +26,7 @@
 https://github.com/user-attachments/assets/b2eef5f3-b335-4e71-a755-dc2e80931979
 
 ## 目录
-- [Next AI Draw.io](#next-ai-drawio)
+- [Cheap](#cheap)
   - [目录](#目录)
   - [示例](#示例)
   - [功能特性](#功能特性)
@@ -102,7 +102,7 @@ https://github.com/user-attachments/assets/b2eef5f3-b335-4e71-a755-dc2e80931979
 
 > **预览功能**：此功能为实验性功能，可能不稳定。
 
-通过MCP（模型上下文协议）在Claude Desktop、Cursor和VS Code等AI代理中使用Next AI Draw.io。
+通过MCP（模型上下文协议）在Claude Desktop、Cursor和VS Code等AI代理中使用Cheap。
 
 ```json
 {

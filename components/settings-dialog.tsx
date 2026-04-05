@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, Github, Info, Moon, Sun, Tag } from "lucide-react"
+import { ChevronRight, Info, Moon, Sun } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -655,41 +655,6 @@ function SettingsContent({
                                 </Button>
                             </div>
                         )}
-                </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-border-subtle bg-surface-1/50 rounded-b-2xl">
-                <div className="flex items-center justify-center gap-3">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Tag className="h-3 w-3" />
-                        {process.env.APP_VERSION}
-                    </span>
-                    <span className="text-muted-foreground">·</span>
-                    <a
-                        href="https://github.com/DayuanJiang/next-ai-draw-io"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                    >
-                        <Github className="h-3 w-3" />
-                        GitHub
-                    </a>
-                    {process.env.NEXT_PUBLIC_SHOW_ABOUT_AND_NOTICE ===
-                        "true" && (
-                        <>
-                            <span className="text-muted-foreground">·</span>
-                            <a
-                                href={`/${currentLang}/about${currentLang === "zh" ? "/cn" : currentLang === "ja" ? "/ja" : ""}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                            >
-                                <Info className="h-3 w-3" />
-                                {dict.nav.about}
-                            </a>
-                        </>
-                    )}
                 </div>
             </div>
         </DialogContent>

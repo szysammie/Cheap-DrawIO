@@ -42,7 +42,6 @@ import { useQuotaManager } from "@/lib/use-quota-manager"
 import { cn, formatXML, isRealDiagram } from "@/lib/utils"
 import type { ValidationState } from "./chat/ValidationCard"
 import { ChatMessageDisplay } from "./chat-message-display"
-import { DevXmlSimulator } from "./dev-xml-simulator"
 
 // localStorage keys for persistence
 const STORAGE_SESSION_ID_KEY = "next-ai-draw-io-session-id"
@@ -1318,7 +1317,7 @@ export default function ChatPanel({
                                         ? "/favicon-white.svg"
                                         : "/favicon.ico"
                                 }
-                                alt="Next AI Drawio"
+                                alt="Cheap"
                                 width={isMobile ? 24 : 28}
                                 height={isMobile ? 24 : 28}
                                 className="rounded flex-shrink-0"
@@ -1326,7 +1325,7 @@ export default function ChatPanel({
                             <h1
                                 className={`${isMobile ? "text-sm" : "text-base"} font-semibold tracking-tight whitespace-nowrap`}
                             >
-                                Next AI Drawio
+                                Cheap Drawio
                             </h1>
                         </div>
                     </button>
@@ -1399,17 +1398,6 @@ export default function ChatPanel({
                     currentInput={input}
                 />
             </main>
-
-            {/* Dev XML Streaming Simulator - only in development */}
-            {DEBUG && (
-                <DevXmlSimulator
-                    setMessages={setMessages}
-                    onDisplayChart={onDisplayChart}
-                    onShowQuotaToast={() =>
-                        quotaManager.showQuotaLimitToast(50, 50)
-                    }
-                />
-            )}
 
             {/* Input */}
             <footer
