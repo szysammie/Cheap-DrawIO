@@ -4,13 +4,17 @@
  * 1. Frontend freezing from large base64 strings in React state
  * 2. Slow AI processing from unnecessarily large images
  * 3. Memory pressure from storing large data URLs
+ *
+ * IMPORTANT: Uses lossless PNG format to preserve diagram accuracy.
+ * JPEG compression artifacts blur text edges and线条 in diagrams,
+ * making it impossible for AI to accurately reproduce them.
+ * PNG at reduced dimensions is still much smaller than original
+ * (e.g., 1920x1080→1280px = ~75% size reduction) while staying lossless.
  */
 
 // Maximum dimensions for AI-processed images
 const MAX_WIDTH = 1280
 const MAX_HEIGHT = 1280
-// JPEG quality for compression (0.7 = good balance of quality/size)
-const JPEG_QUALITY = 0.7
 
 interface CompressedImageResult {
     dataUrl: string
@@ -22,22 +26,22 @@ interface CompressedImageResult {
 
 /**
  * Compress and resize an image file for AI processing.
- * Uses canvas-based resize to reduce dimensions, then JPEG compression.
+ * Uses canvas-based resize to reduce dimensions, then PNG compression (lossless).
  *
- * For diagrams/screenshots, JPEG at 0.7 quality is visually identical
- * but 5-10x smaller than PNG, and AI vision models work equally well with it.
+ * PNG is critical for diagram accuracy:
+ * - Lossless: text edges, lines, and shapes are preserved exactly
+ * - JPEG artifacts blur text and make AI reproduction inaccurate
+ * - Resize from 1920x1080→1280px gives ~75% size reduction, offsetting PNG overhead
  *
  * @param file - The image File to compress
  * @param maxWidth - Maximum width (default: 1280)
  * @param maxHeight - Maximum height (default: 1280)
- * @param quality - JPEG quality 0-1 (default: 0.7)
  * @returns Promise with compressed data URL and size info
  */
 export async function compressImageForAI(
     file: File,
     maxWidth: number = MAX_WIDTH,
     maxHeight: number = MAX_HEIGHT,
-    quality: number = JPEG_QUALITY,
 ): Promise<CompressedImageResult> {
     return new Promise((resolve, reject) => {
         const originalSize = file.size
@@ -98,21 +102,19 @@ export async function compressImageForAI(
                 // Draw resized image
                 ctx.drawImage(img, 0, 0, width, height)
 
-                // Convert to JPEG blob (much smaller than PNG for natural images)
-                const onConverted = (
-                    blob: Blob | null,
-                    originalDataUrl: string,
-                ) => {
+                const onConverted = (blob: Blob | null) => {
                     if (!blob) {
-                        reject(new Error("Failed to convert canvas to blob"))
+                        reject(
+                            new Error("Failed to convert canvas to PNG blob"),
+                        )
                         return
                     }
 
                     // For very small originals that don't need compression,
-                    // use the original if it's already smaller
+                    // use the original if it's already smaller than resized PNG
                     if (originalSize <= blob.size) {
                         resolve({
-                            dataUrl: originalDataUrl,
+                            dataUrl: reader.result as string,
                             originalSize,
                             compressedSize: originalSize,
                             width: img.width,
@@ -140,10 +142,8 @@ export async function compressImageForAI(
 
                 if (canvas instanceof OffscreenCanvas) {
                     canvas
-                        .convertToBlob({ type: "image/jpeg", quality })
-                        .then((blob) =>
-                            onConverted(blob, reader.result as string),
-                        )
+                        .convertToBlob({ type: "image/png" })
+                        .then(onConverted)
                         .catch(() =>
                             reject(
                                 new Error(
@@ -153,9 +153,8 @@ export async function compressImageForAI(
                         )
                 } else {
                     ;(canvas as HTMLCanvasElement).toBlob(
-                        (blob) => onConverted(blob, reader.result as string),
-                        "image/jpeg",
-                        quality,
+                        (blob) => onConverted(blob),
+                        "image/png",
                     )
                 }
             }

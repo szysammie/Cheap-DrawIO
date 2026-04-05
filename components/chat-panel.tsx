@@ -33,6 +33,7 @@ import { useValidateDiagram } from "@/hooks/use-validate-diagram"
 import { getApiEndpoint } from "@/lib/base-path"
 import { findCachedResponse } from "@/lib/cached-responses"
 import { formatMessage } from "@/lib/i18n/utils"
+import { generateImageCaptionFromFile } from "@/lib/image-caption"
 import { compressImageForAI } from "@/lib/image-compression"
 import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
 import { sanitizeMessages } from "@/lib/session-storage"
@@ -283,6 +284,16 @@ export default function ChatPanel({
     // Store original XML for edit_diagram streaming - shared between streaming preview and tool handler
     // Key: toolCallId, Value: original XML before any operations applied
     const editDiagramOriginalXmlRef = useRef<Map<string, string>>(new Map())
+
+    // Track last uploaded image and its AI-friendly caption for multi-turn context.
+    // Cleared when user starts a new topic (new chat) or uploads a new image.
+    // In follow-up messages without new uploads, the caption is appended as text
+    // so the AI knows what image the user is referring to.
+    const imageContextRef = useRef<{
+        imageDataUrl: string
+        caption: string
+        messageIndex: number
+    } | null>(null)
 
     // Debounce timeout for localStorage writes (prevents blocking during streaming)
     const localStorageDebounceRef = useRef<ReturnType<
@@ -844,8 +855,51 @@ export default function ChatPanel({
                     urlData,
                 )
 
-                // Add the combined text as the first part
-                parts.unshift({ type: "text", text: userText })
+                // Track images for multi-turn context:
+                // - If user uploads new images this turn → generate caption and store in imageContextRef
+                // - If no new images → attach stored caption as text so AI knows what image is being referenced
+                const hasCurrentImages = parts.some((p) => p.type === "file")
+
+                if (hasCurrentImages) {
+                    // User uploaded new images — generate caption and update context
+                    const imageParts = parts.filter((p) => p.type === "file")
+                    if (imageParts.length > 0) {
+                        const latestImagePart =
+                            imageParts[imageParts.length - 1]
+                        try {
+                            // Find the original File object for caption generation
+                            const originalFile = files[files.length - 1]
+                            const caption = originalFile
+                                ? await generateImageCaptionFromFile(
+                                      originalFile,
+                                  )
+                                : "[User uploaded image]"
+
+                            imageContextRef.current = {
+                                imageDataUrl: latestImagePart.url as string,
+                                caption,
+                                messageIndex: messages.length,
+                            }
+                        } catch {
+                            imageContextRef.current = {
+                                imageDataUrl: latestImagePart.url as string,
+                                caption: "[User uploaded image]",
+                                messageIndex: messages.length,
+                            }
+                        }
+                    }
+                    parts.unshift({ type: "text", text: userText })
+                } else if (imageContextRef.current) {
+                    // No new images uploaded — attach the caption as text
+                    // so the AI knows which image the user is referring to
+                    const { caption } = imageContextRef.current
+                    const enhancedText = userText
+                        ? `${userText}\n\n[Image context]: ${caption}`
+                        : `[Image context]: ${caption}`
+                    parts.unshift({ type: "text", text: enhancedText })
+                } else {
+                    parts.unshift({ type: "text", text: userText })
+                }
 
                 // Get previous XML from the last snapshot (before this message)
                 const snapshotKeys = Array.from(
@@ -946,6 +1000,7 @@ export default function ChatPanel({
         setValidationStates({}) // Clear validation states to prevent memory leak
         handleFileChange([]) // Use handleFileChange to also clear pdfData
         setUrlData(new Map())
+        imageContextRef.current = null // Clear image context for new conversation
         const newSessionId = `session-${Date.now()}-${Math.random()
             .toString(36)
             .slice(2, 9)}`
@@ -1143,7 +1198,7 @@ export default function ChatPanel({
                 imageParts.push({
                     type: "file",
                     url: dataUrl,
-                    mediaType: "image/jpeg",
+                    mediaType: "image/png",
                 })
             }
         }
