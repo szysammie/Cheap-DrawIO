@@ -64,8 +64,6 @@ function analyzeImageColors(
         bSum = 0
     let whitePixels = 0 // Near-white pixels (typical of diagrams/screenshots)
     let darkPixels = 0 // Near-black pixels (text, borders)
-    let colorfulPixels = 0 // High saturation pixels (photos)
-    const gridLikePixels = 0 // High contrast pixels (lines, boxes)
 
     let lastR = -1,
         lastG = -1,
@@ -92,14 +90,6 @@ function analyzeImageColors(
             darkPixels++
         }
 
-        // Colorful pixels (not grayscale)
-        const maxC = Math.max(r, g, b)
-        const minC = Math.min(r, g, b)
-        const sat = maxC > 0 ? (maxC - minC) / maxC : 0
-        if (sat > 0.3 && maxC > 80) {
-            colorfulPixels++
-        }
-
         // Detect grid-like structure (high local contrast = likely lines/boxes)
         if (lastR >= 0) {
             const contrast =
@@ -115,7 +105,6 @@ function analyzeImageColors(
 
     const whiteRatio = whitePixels / totalSamples
     const darkRatio = darkPixels / totalSamples
-    const colorfulRatio = colorfulPixels / totalSamples
     const contrastRatio = contrastChanges / totalSamples
 
     // Determine dominant tone from average color

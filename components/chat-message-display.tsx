@@ -10,6 +10,7 @@ import {
     Copy,
     FileCode,
     FileText,
+    Image as ImageIcon,
     Link,
     Pencil,
     RotateCcw,
@@ -1259,33 +1260,55 @@ export function ChatMessageDisplay({
                                                                         part.type ===
                                                                         "file"
                                                                     ) {
+                                                                        const imageUrl =
+                                                                            (
+                                                                                part as {
+                                                                                    url: string
+                                                                                }
+                                                                            )
+                                                                                .url
+                                                                        const isStreaming =
+                                                                            status ===
+                                                                                "streaming" ||
+                                                                            status ===
+                                                                                "submitted"
+
                                                                         return (
                                                                             <div
                                                                                 key={`${message.id}-file-${group.startIndex}-${partIndex}`}
                                                                                 className="mt-2"
                                                                             >
-                                                                                <Image
-                                                                                    src={
-                                                                                        (
-                                                                                            part as {
-                                                                                                url: string
-                                                                                            }
-                                                                                        )
-                                                                                            .url
-                                                                                    }
-                                                                                    width={
-                                                                                        200
-                                                                                    }
-                                                                                    height={
-                                                                                        200
-                                                                                    }
-                                                                                    alt={`Uploaded diagram or image for AI analysis`}
-                                                                                    className="rounded-lg border border-white/20"
-                                                                                    style={{
-                                                                                        objectFit:
-                                                                                            "contain",
-                                                                                    }}
-                                                                                />
+                                                                                {isStreaming ? (
+                                                                                    // During streaming: show a skeleton placeholder instead of the real image.
+                                                                                    // Rendering the full base64 string during streaming causes severe
+                                                                                    // main-thread blocking from React re-renders on every token update.
+                                                                                    // The actual image is rendered after streaming completes.
+                                                                                    <div className="w-48 h-48 rounded-lg border border-border bg-muted/30 flex flex-col items-center justify-center gap-2">
+                                                                                        <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                                                                                        <span className="text-xs text-muted-foreground/50">
+                                                                                            Image
+                                                                                        </span>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <Image
+                                                                                        src={
+                                                                                            imageUrl
+                                                                                        }
+                                                                                        width={
+                                                                                            200
+                                                                                        }
+                                                                                        height={
+                                                                                            200
+                                                                                        }
+                                                                                        alt="Uploaded diagram or image for AI analysis"
+                                                                                        className="rounded-lg border border-white/20"
+                                                                                        style={{
+                                                                                            objectFit:
+                                                                                                "contain",
+                                                                                        }}
+                                                                                        unoptimized
+                                                                                    />
+                                                                                )}
                                                                             </div>
                                                                         )
                                                                     }
